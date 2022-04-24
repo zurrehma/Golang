@@ -42,23 +42,34 @@ func finshExam() {
 }
 
 func takeQuiz(problems []problem, timer *time.Timer) {
-	correct := 0	
+	correct := 0
+	answerCh := make(chan string)
+// v2.1
+forloop:
 	for index, problem := range problems {
+		fmt.Printf("Problem #%d: %s =", index+1, problem.question)	
+		go func(){
+			var answer string
+			fmt.Scanf("%s\n", &answer)
+			answerCh <-answer
+		}()
 		select {
 		case <-timer.C:
-			fmt.Println("Over")
-			fmt.Printf("You scored %d out of %d\n", correct, len(problems))
-			return
-		default:
-		fmt.Printf("Problem #%d: %s =", index+1, problem.question)
-		var answer string
-		fmt.Scanf("%s\n", &answer)
-		if answer == problem.answer {
-			correct ++
-		}
+			// v2
+			// fmt.Printf("\nYou scored %d out of %d\n", correct, len(problems))
+			// we can use return to break the loop or we can also do it with break or continue using lables (https://www.ardanlabs.com/blog/2013/11/label-breaks-in-go.html)
+			// (https://stackoverflow.com/questions/46792159/labels-break-vs-continue-vs-goto) 
+			// v2
+			// return 
+			// v2.1
+			break forloop
+		case answer := <-answerCh:
+			if answer == problem.answer {
+				correct ++
+			}
 	}
 	}
-	fmt.Printf("You scored %d out of %d\n", correct, len(problems))	
+	fmt.Printf("\nYou scored %d out of %d\n", correct, len(problems))	
 }
 
 func parseLines(lines [][]string) []problem {
